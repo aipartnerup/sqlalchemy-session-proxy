@@ -28,6 +28,14 @@ dependencies = [
     "sqlalchemy>=2.0.0"
 ]
 
+[project.optional-dependencies]
+# Development dependencies
+dev = [
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "build>=1.0.0"
+]
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
