@@ -1,3 +1,12 @@
+## [0.2.0] - 2026-01-19
+
+### Added
+- Added `query` method for legacy ORM queries (sync/async).
+- Added `scalar` method for executing statements and returning a single scalar result (sync/async).
+- Added `run_sync` method to allow running synchronous functions in async context (AsyncSession only).
+- Updated README.md to document new methods and clarify usage and import paths.
+
+
 ## [0.1.0] - 2026-01-18
 
 ### Added

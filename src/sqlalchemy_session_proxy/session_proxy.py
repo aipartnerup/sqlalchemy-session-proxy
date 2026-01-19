@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from typing import Any, Union, Optional, Iterable, Sequence, ParamSpec, TypeVar
+from typing import Any, Union, Optional, Iterable, Sequence, ParamSpec, TypeVar, Callable, Concatenate
 from sqlalchemy import util
 from sqlalchemy.ext.asyncio import AsyncResult, AsyncScalarResult
 from sqlalchemy.sql.selectable import ForUpdateParameter
@@ -20,8 +20,12 @@ from sqlalchemy.orm.session import _BindArguments
 from sqlalchemy.orm.session import _EntityBindKey
 from sqlalchemy.orm.session import _PKIdentityArgument
 from sqlalchemy.orm.session import _SessionBind
+from sqlalchemy.orm.query import Query
+
 from sqlalchemy.sql.base import Executable
 from sqlalchemy.sql.elements import ClauseElement
+from sqlalchemy.sql._typing import _ColumnsClauseArgument
+
 
 
 _P = ParamSpec("_P")
@@ -53,6 +57,18 @@ class SqlalchemySessionProxy:
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self._session, name)
+    
+    async def __aenter__(self):
+        if self.is_async:
+            return await self._session.__aenter__()
+        else:
+            return self._session.__enter__()
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if self.is_async:
+            return await self._session.__aexit__(exc_type, exc_val, exc_tb)
+        else:
+            return self._session.__exit__(exc_type, exc_val, exc_tb)
 
     @property
     def session(self) -> Union[Session, AsyncSession]:
@@ -149,6 +165,31 @@ class SqlalchemySessionProxy:
             return await self._session.scalars(statement, params=params, execution_options=execution_options, bind_arguments=bind_arguments, **kw)
         else:
             return self._session.scalars(statement, params=params, execution_options=execution_options, bind_arguments=bind_arguments, **kw)
+
+    
+    async def query(
+        self, *entities: _ColumnsClauseArgument[Any], **kwargs: Any
+    ) -> Query[Any]:
+        """Return a new :class:`_query.Query` object corresponding to this
+        :class:`_orm.Session`.
+
+        Note that the :class:`_query.Query` object is legacy as of
+        SQLAlchemy 2.0; the :func:`_sql.select` construct is now used
+        to construct ORM queries.
+
+        .. seealso::
+
+            :ref:`unified_tutorial`
+
+            :ref:`queryguide_toplevel`
+
+            :ref:`query_api_toplevel` - legacy API doc
+
+        """
+        if self.is_async:
+            raise NotImplementedError("The query() method is not supported for asynchronous sessions.") 
+        else:
+            return self._session.query(entities, self, **kwargs)
 
     async def get(
         self,
@@ -250,7 +291,7 @@ class SqlalchemySessionProxy:
         :class:`_asyncio.AsyncResult` object.
 
         """
-        if self.is_async:
+        if not self.is_async:
             raise NotImplementedError("Streaming is only supported for asynchronous sessions.")
 
         return await self._session.stream(
@@ -284,10 +325,10 @@ class SqlalchemySessionProxy:
 
         """
 
-        if self.is_async:
+        if not self.is_async:
             raise NotImplementedError("Streaming is only supported for asynchronous sessions.")
         
-        result = await self.stream_scalars(
+        result = await self._session.stream_scalars(
             statement,
             params=params,
             execution_options=execution_options,
@@ -350,9 +391,9 @@ class SqlalchemySessionProxy:
         """
 
         if self.is_async:
-            await self._session.flush()
+            await self._session.flush(objects=objects)
         else:
-            self._session.flush()
+            self._session.flush(objects=objects)
 
 
     def get_transaction(self) -> Optional[Any]:
@@ -784,3 +825,91 @@ class SqlalchemySessionProxy:
         """  # noqa: E501
 
         return self._session.in_nested_transaction()
+    
+    
+    async def scalar(
+        self,
+        statement: Executable,
+        params: Optional[_CoreAnyExecuteParams] = None,
+        *,
+        execution_options: OrmExecuteOptionsParameter = util.EMPTY_DICT,
+        bind_arguments: Optional[_BindArguments] = None,
+        **kw: Any,
+    ) -> Any:
+        """Execute a statement and return a scalar result.
+
+        .. seealso::
+
+            :meth:`_orm.Session.scalar` - main documentation for scalar
+
+        """
+
+        if self.is_async:
+            return await self._session.scalar(statement=statement, params=params, execution_options=execution_options, bind_arguments=bind_arguments, **kw)
+        else:
+            return self._session.scalar(statement=statement, params=params, execution_options=execution_options, bind_arguments=bind_arguments, **kw)
+        
+    
+    async def run_sync(
+        self,
+        fn: Callable[Concatenate[Session, _P], _T],
+        *arg: _P.args,
+        **kw: _P.kwargs,
+    ) -> _T:
+        """Invoke the given synchronous (i.e. not async) callable,
+        passing a synchronous-style :class:`_orm.Session` as the first
+        argument.
+
+        This method allows traditional synchronous SQLAlchemy functions to
+        run within the context of an asyncio application.
+
+        E.g.::
+
+            def some_business_method(session: Session, param: str) -> str:
+                '''A synchronous function that does not require awaiting
+
+                :param session: a SQLAlchemy Session, used synchronously
+
+                :return: an optional return value is supported
+
+                '''
+                session.add(MyObject(param=param))
+                session.flush()
+                return "success"
+
+
+            async def do_something_async(async_engine: AsyncEngine) -> None:
+                '''an async function that uses awaiting'''
+
+                with AsyncSession(async_engine) as async_session:
+                    # run some_business_method() with a sync-style
+                    # Session, proxied into an awaitable
+                    return_code = await async_session.run_sync(some_business_method, param="param1")
+                    print(return_code)
+
+        This method maintains the asyncio event loop all the way through
+        to the database connection by running the given callable in a
+        specially instrumented greenlet.
+
+        .. tip::
+
+            The provided callable is invoked inline within the asyncio event
+            loop, and will block on traditional IO calls.  IO within this
+            callable should only call into SQLAlchemy's asyncio database
+            APIs which will be properly adapted to the greenlet context.
+
+        .. seealso::
+
+            :class:`.AsyncAttrs`  - a mixin for ORM mapped classes that provides
+            a similar feature more succinctly on a per-attribute basis
+
+            :meth:`.AsyncConnection.run_sync`
+
+            :ref:`session_run_sync`
+        """  # noqa: E501
+
+        if not self.is_async:
+            raise NotImplementedError(
+                "The run_sync() method is only available for AsyncSession."
+            )
+        return await self._session.run_sync(fn, *arg, **kw)
