@@ -11,7 +11,7 @@ requires-python = ">=3.10"
 authors = [
     {name = "Tercel", email = "tercel.yi@gmail.com"}
 ]
-homepage = "https://github.com/aipartnerup/sqlalchemy-session-proxy"
+home-page = "https://github.com/aipartnerup/sqlalchemy-session-proxy"
 license = {text = "Apache-2.0"}
 keywords = ["sqlalchemy", "database session proxy"]
 classifiers = [
@@ -57,3 +57,6 @@ warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false
 
+[project.urls]
+Homepage = "https://github.com/aipartnerup/sqlalchemy-session-proxy"
+Source = "https://github.com/aipartnerup/sqlalchemy-session-proxy" 
