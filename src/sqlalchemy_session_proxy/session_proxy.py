@@ -189,7 +189,7 @@ class SqlalchemySessionProxy:
         if self.is_async:
             raise NotImplementedError("The query() method is not supported for asynchronous sessions.") 
         else:
-            return self._session.query(entities, self, **kwargs)
+            return self._session.query(*entities, **kwargs)
 
     async def get(
         self,
@@ -328,14 +328,13 @@ class SqlalchemySessionProxy:
         if not self.is_async:
             raise NotImplementedError("Streaming is only supported for asynchronous sessions.")
         
-        result = await self._session.stream_scalars(
+        return await self._session.stream_scalars(
             statement,
             params=params,
             execution_options=execution_options,
             bind_arguments=bind_arguments,
             **kw,
         )
-        return result.scalars()
 
     async def delete(self, instance: object) -> None:
         """Mark an instance as deleted.

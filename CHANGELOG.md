@@ -1,3 +1,16 @@
+
+## [0.3.0] - 2026-01-26
+
+### Changed
+- Bump version to 0.3.0 in `pyproject.toml` and `__init__.py`.
+- Improved and expanded documentation in `README.md` for clarity and completeness.
+- Minor code improvements and bugfix for the `query` method in `SqlalchemySessionProxy` (fixed argument unpacking for sync sessions).
+
+### Fixed
+- Fixed a bug where the `query` method did not properly unpack arguments for synchronous sessions.
+
+
+
 ## [0.2.0] - 2026-01-19
 
 ### Added
