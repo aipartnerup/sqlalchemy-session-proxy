@@ -1,4 +1,9 @@
 
+## [0.3.1] - 2026-03-22
+
+### Changed
+- Rebrand: aipartnerup → aiperceivable
+
 ## [0.3.0] - 2026-01-26
 
 ### Changed

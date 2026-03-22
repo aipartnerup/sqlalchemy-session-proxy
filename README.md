@@ -168,7 +168,7 @@ Tercel ([tercel.yi@gmail.com](mailto:tercel.yi@gmail.com))
 
 ## Links
 
-* **GitHub**: [https://github.com/aipartnerup/sqlalchemy-session-proxy](https://github.com/aipartnerup/sqlalchemy-session-proxy)
+* **GitHub**: [https://github.com/aiperceivable/sqlalchemy-session-proxy](https://github.com/aiperceivable/sqlalchemy-session-proxy)
 * **PyPI**: [https://pypi.org/project/sqlalchemy-session-proxy/](https://pypi.org/project/sqlalchemy-session-proxy/)
-* **Issues**: [https://github.com/aipartnerup/sqlalchemy-session-proxy/issues](https://github.com/aipartnerup/sqlalchemy-session-proxy/issues)
-* **Discussions**: [https://github.com/aipartnerup/sqlalchemy-session-proxy/discussions](https://github.com/aipartnerup/sqlalchemy-session-proxy/discussions)
+* **Issues**: [https://github.com/aiperceivable/sqlalchemy-session-proxy/issues](https://github.com/aiperceivable/sqlalchemy-session-proxy/issues)
+* **Discussions**: [https://github.com/aiperceivable/sqlalchemy-session-proxy/discussions](https://github.com/aiperceivable/sqlalchemy-session-proxy/discussions)
